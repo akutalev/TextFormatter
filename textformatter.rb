@@ -9,3 +9,6 @@ javaText.each_char do |symbol|
   formatter.doNextSymbol(symbol)
 end
 File.open('output.txt', 'w') { |file| file.write(formatter.text) }
+if formatter.currentStatusMessage != nil
+  print formatter.currentStatusMessage
+end

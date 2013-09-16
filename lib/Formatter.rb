@@ -1,6 +1,6 @@
 require './lib/Constants.rb'
 class Formatter
-  attr_reader :text
+  attr_reader :currentStatusMessage
   
   def initialize()
     @countParentheses = 0
@@ -12,6 +12,7 @@ class Formatter
     @dontNewLine = false
     @needTab = false
     @lastPutSymbol = Constants::EMPTY_SYMBOL
+    @currentStatusMessage = nil
   end
 
   def doNextSymbol(symbol)
@@ -20,14 +21,23 @@ class Formatter
         @dontNewLine = true
       end
       if @needTab && !symbol.eql?(Constants::CLOSED_BRACE) && !symbol.eql?(Constants::TAB_SYMBOL) && !symbol.eql?(Constants::SPACE)
-        @text = @text + Constants::SPACE * Constants::TAB_SIZE * @countBraces
-        @needTab = false
-        @lastPutSymbol = Constants::SPACE
+        if @countBraces < 0 
+          @currentStatusMessage = "Broken text: braces unbalanced!\n"
+        else
+          @text = @text + Constants::SPACE * Constants::TAB_SIZE * @countBraces
+          @needTab = false
+          @lastPutSymbol = Constants::SPACE
+        end
       end
       if @needTab && symbol.eql?(Constants::CLOSED_BRACE) && !symbol.eql?(Constants::TAB_SYMBOL) && !symbol.eql?(Constants::SPACE)
-        @text = @text + Constants::SPACE * Constants::TAB_SIZE * (@countBraces - 1)
-        @needTab = false
-        @lastPutSymbol = Constants::SPACE
+        if @countBraces < 1 
+          @currentStatusMessage = "Broken text: braces unbalanced!\n"
+          @countBraces = 2
+        else
+          @text = @text + Constants::SPACE * Constants::TAB_SIZE * (@countBraces - 1)
+          @needTab = false
+          @lastPutSymbol = Constants::SPACE
+        end
       end
       if symbol.eql?(Constants::OPENED_PARENTHES) then
         @countParentheses = @countParentheses + 1
@@ -74,5 +84,14 @@ class Formatter
       @beforLastSymbol = @lastSymbol
       @lastSymbol = symbol
     end
+  end
+
+  def text
+    if (@countBraces != 0 || @countParentheses != 0)
+      @currentStatusMessage = "Broken text: braces unbalanced!\n"
+    else
+      @currentStatusMessage = "Success!\n"
+    end
+    @text
   end
 end
