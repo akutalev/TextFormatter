@@ -87,8 +87,10 @@ class Formatter
   end
 
   def text
-    if (@countBraces != 0 || @countParentheses != 0)
+    if @countBraces != 0 then
       @currentStatusMessage = "Broken text: braces unbalanced!\n"
+    elsif @countParentheses != 0 then
+      @currentStatusMessage = "Broken text: parentheses unbalanced!\n"
     else
       @currentStatusMessage = "Success!\n"
     end
