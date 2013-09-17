@@ -1,99 +1,122 @@
-require './lib/Constants.rb'
+require './lib/TextConstants.rb'
+require './lib/CustomConstants.rb'
+require './lib/MessageConstants.rb'
+
 class Formatter
-  attr_reader :currentStatusMessage
-  
+  attr_reader :statusMessage
+
   def initialize()
     @countParentheses = 0
     @countBraces = 0
     @countTab = 0
-    @text = Constants::EMPTY_SYMBOL
-    @lastSymbol = Constants::EMPTY_SYMBOL
-    @beforLastSymbol = Constants::EMPTY_SYMBOL
+    @returningSymbol = TextConstants::EMPTY_SYMBOL
+    @lastSymbol = TextConstants::EMPTY_SYMBOL
+    @beforLastSymbol = TextConstants::EMPTY_SYMBOL
     @dontNewLine = false
     @needTab = false
-    @lastPutSymbol = Constants::EMPTY_SYMBOL
-    @currentStatusMessage = nil
+    @lastPutSymbol = TextConstants::EMPTY_SYMBOL
+    @statusMessage = nil
+    @isError = false
   end
 
+  def formatFile(inputStream, outputStream)
+    inputStream.each_char do |symbol|
+      returnedSymbol = doNextSymbol(symbol)
+      if returnedSymbol != nil || returnedSymbol != ""
+        outputStream.print(returnedSymbol)
+      end
+    end
+    return statusMessage
+  end
+
+  def statusMessage
+    if @countBraces != 0 then
+      @statusMessage =  MessageConstants::ERROR + MessageConstants::COLON +
+        MessageConstants::ERROR_BRACES_UNBALANCED + MessageConstants::EXCLAMATION_MARK + MessageConstants::NEW_LINE_SYMBOL
+    elsif @countParentheses != 0 then
+      @statusMessage =  MessageConstants::ERROR + MessageConstants::COLON +
+        MessageConstants::ERROR_PARENTHESES_UNBALANCED + MessageConstants::EXCLAMATION_MARK + MessageConstants::NEW_LINE_SYMBOL
+    else
+      @statusMessage = MessageConstants::SUCCESS + MessageConstants::EXCLAMATION_MARK + MessageConstants::NEW_LINE_SYMBOL
+    end
+    @statusMessage
+  end
+
+private
   def doNextSymbol(symbol)
-    if !symbol.empty?
-      if @beforLastSymbol + @lastSymbol + symbol == Constants::FOR
+    @returningSymbol = TextConstants::EMPTY_SYMBOL
+    if !symbol.empty? && !@isError
+      if @beforLastSymbol + @lastSymbol + symbol == TextConstants::FOR
         @dontNewLine = true
       end
-      if @needTab && !symbol.eql?(Constants::CLOSED_BRACE) && !symbol.eql?(Constants::TAB_SYMBOL) && !symbol.eql?(Constants::SPACE)
+      if @needTab && !symbol.eql?(TextConstants::CLOSED_BRACE) && !symbol.eql?(TextConstants::TAB_SYMBOL) && !symbol.eql?(TextConstants::SPACE)
         if @countBraces < 0 
-          @currentStatusMessage = "Broken text: braces unbalanced!\n"
+          @statusMessage = MessageConstants::ERROR + MessageConstants::COLON +
+            MessageConstants::ERROR_BRACES_UNBALANCED + MessageConstants::EXCLAMATION_MARK + MessageConstants::NEW_LINE_SYMBOL
+          @isError = true
         else
-          @text = @text + Constants::SPACE * Constants::TAB_SIZE * @countBraces
+          @returningSymbol = @returningSymbol + CustomConstants::INDENT_SYMBOL * CustomConstants::TAB_SIZE * @countBraces
           @needTab = false
-          @lastPutSymbol = Constants::SPACE
+          @lastPutSymbol = CustomConstants::INDENT_SYMBOL
         end
       end
-      if @needTab && symbol.eql?(Constants::CLOSED_BRACE) && !symbol.eql?(Constants::TAB_SYMBOL) && !symbol.eql?(Constants::SPACE)
+      if @needTab && symbol.eql?(TextConstants::CLOSED_BRACE) && !symbol.eql?(TextConstants::TAB_SYMBOL) && !symbol.eql?(TextConstants::SPACE)
         if @countBraces < 1 
-          @currentStatusMessage = "Broken text: braces unbalanced!\n"
-          @countBraces = 2
+          @statusMessage = MessageConstants::ERROR + MessageConstants::COLON +
+            MessageConstants::ERROR_BRACES_UNBALANCED + MessageConstants::EXCLAMATION_MARK + MessageConstants::NEW_LINE_SYMBOL
+          @isError = true
         else
-          @text = @text + Constants::SPACE * Constants::TAB_SIZE * (@countBraces - 1)
+          @returningSymbol = @returningSymbol + CustomConstants::INDENT_SYMBOL * CustomConstants::TAB_SIZE * (@countBraces - 1)
           @needTab = false
-          @lastPutSymbol = Constants::SPACE
+          @lastPutSymbol = CustomConstants::INDENT_SYMBOL
         end
       end
-      if symbol.eql?(Constants::OPENED_PARENTHES) then
+      if symbol.eql?(TextConstants::OPENED_PARENTHES) then
         @countParentheses = @countParentheses + 1
-        @text = @text + Constants::OPENED_PARENTHES 
-        @lastPutSymbol = Constants::OPENED_PARENTHES
-      elsif symbol.eql?(Constants::CLOSED_PARENTHES) then
+        @returningSymbol = @returningSymbol + TextConstants::OPENED_PARENTHES 
+        @lastPutSymbol = TextConstants::OPENED_PARENTHES
+      elsif symbol.eql?(TextConstants::CLOSED_PARENTHES) then
         @countParentheses = @countParentheses - 1
-        @text = @text + Constants::CLOSED_PARENTHES + Constants::SPACE
-        @lastPutSymbol = Constants::OPENED_PARENTHES
-      elsif symbol.eql?(Constants::OPENED_BRACE) then
+        @returningSymbol = @returningSymbol + TextConstants::CLOSED_PARENTHES + TextConstants::SPACE
+        @lastPutSymbol = TextConstants::OPENED_PARENTHES
+      elsif symbol.eql?(TextConstants::OPENED_BRACE) then
         @dontNewLine = false
         @countBraces = @countBraces + 1
         @countTab = @countTab + 1
-        @text = @text + Constants::OPENED_BRACE + Constants::NEW_LINE_SYMBOL
+        @returningSymbol = @returningSymbol + TextConstants::OPENED_BRACE + TextConstants::NEW_LINE_SYMBOL
         @needTab = true
-        @lastPutSymbol = Constants::NEW_LINE_SYMBOL
-      elsif symbol.eql?(Constants::CLOSED_BRACE) then
+        @lastPutSymbol = TextConstants::NEW_LINE_SYMBOL
+      elsif symbol.eql?(TextConstants::CLOSED_BRACE) then
         @countBraces = @countBraces - 1
         @countTab = @countTab - 1
-        @text = @text + Constants::CLOSED_BRACE + Constants::NEW_LINE_SYMBOL
+        @returningSymbol = @returningSymbol + TextConstants::CLOSED_BRACE + TextConstants::NEW_LINE_SYMBOL
         @needTab = true
-        @lastPutSymbol = Constants::NEW_LINE_SYMBOL
-      elsif symbol.eql?(Constants::SEMICOLON) && !@dontNewLine then 
-        @text = @text + Constants::SEMICOLON + Constants::NEW_LINE_SYMBOL
+        @lastPutSymbol = TextConstants::NEW_LINE_SYMBOL
+      elsif symbol.eql?(TextConstants::SEMICOLON) && !@dontNewLine then 
+        @returningSymbol = @returningSymbol + TextConstants::SEMICOLON + TextConstants::NEW_LINE_SYMBOL
         @needTab = true
-        @lastPutSymbol = Constants::NEW_LINE_SYMBOL
-      elsif symbol.eql?(Constants::SPACE) || symbol.eql?(Constants::TAB_SYMBOL) then
+        @lastPutSymbol = TextConstants::NEW_LINE_SYMBOL
+      elsif symbol.eql?(TextConstants::SPACE) || symbol.eql?(TextConstants::TAB_SYMBOL) then
         if (
-          !@lastPutSymbol.eql?(Constants::SPACE) &&
-          !@lastPutSymbol.eql?(Constants::TAB_SYMBOL) &&
-          !@lastPutSymbol.eql?(Constants::OPENED_BRACE) &&
-          !@lastPutSymbol.eql?(Constants::CLOSED_BRACE) &&
-          !@lastPutSymbol.eql?(Constants::NEW_LINE_SYMBOL)
+          !@lastPutSymbol.eql?(TextConstants::SPACE) &&
+          !@lastPutSymbol.eql?(TextConstants::TAB_SYMBOL) &&
+          !@lastPutSymbol.eql?(TextConstants::OPENED_BRACE) &&
+          !@lastPutSymbol.eql?(TextConstants::CLOSED_BRACE) &&
+          !@lastPutSymbol.eql?(TextConstants::NEW_LINE_SYMBOL)
         )
-          @text = @text + Constants::SPACE
-          @lastPutSymbol = Constants::SPACE
+          @returningSymbol = @returningSymbol + TextConstants::SPACE
+          @lastPutSymbol = TextConstants::SPACE
         end
-      elsif symbol.eql?(Constants::NEW_LINE_SYMBOL)
+      elsif symbol.eql?(TextConstants::NEW_LINE_SYMBOL)
         
       elsif
-        @text = @text + symbol
+        @returningSymbol = @returningSymbol + symbol
         @lastPutSymbol = symbol
       end
       @beforLastSymbol = @lastSymbol
       @lastSymbol = symbol
+      return @returningSymbol
     end
   end
 
-  def text
-    if @countBraces != 0 then
-      @currentStatusMessage = "Broken text: braces unbalanced!\n"
-    elsif @countParentheses != 0 then
-      @currentStatusMessage = "Broken text: parentheses unbalanced!\n"
-    else
-      @currentStatusMessage = "Success!\n"
-    end
-    @text
-  end
 end
