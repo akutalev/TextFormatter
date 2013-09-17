@@ -19,12 +19,22 @@ class Formatter
     @isError = false
   end
 
-  def formatFile(inputStream, outputStream)
-    inputStream.each_char do |symbol|
-      returnedSymbol = doNextSymbol(symbol)
-      if returnedSymbol != nil || returnedSymbol != ""
-        outputStream.print(returnedSymbol)
+  def format(inputIOStream, outputIOStream)
+    if inputIOStream.respond_to?(:each_char)
+      begin
+        inputIOStream.each_char do |symbol|
+          returnedSymbol = doNextSymbol(symbol)
+          if returnedSymbol != nil || !returnedSymbol.empty?
+            outputIOStream.print(returnedSymbol)
+          end
+        end
+      rescue Exception => e
+        @statusMessage = e.message
+        @isError = true
+      ensure
       end
+    else
+      @statusMessage = MessageConstants::ERROR + MessageConstants::COLON + MessageConstants::WRONG_STREAM + MessageConstants::EXCLAMATION_MARK + MessageConstants::NEW_LINE_SYMBOL
     end
     return statusMessage
   end
