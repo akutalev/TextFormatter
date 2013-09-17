@@ -20,21 +20,25 @@ class Formatter
   end
 
   def format(inputIOStream, outputIOStream)
-    if inputIOStream.respond_to?(:each_char)
-      begin
-        inputIOStream.each_char do |symbol|
-          returnedSymbol = doNextSymbol(symbol)
-          if returnedSymbol != nil || !returnedSymbol.empty?
-            outputIOStream.print(returnedSymbol)
+    if !inputIOStream.nil? && !outputIOStream.nil?
+      if inputIOStream.respond_to?(:each_char)
+        begin
+          inputIOStream.each_char do |symbol|
+            returnedSymbol = doNextSymbol(symbol)
+            if returnedSymbol != nil || !returnedSymbol.empty?
+              outputIOStream.print(returnedSymbol)
+            end
           end
+        rescue Exception => e
+          @statusMessage = e.message
+          @isError = true
+        ensure
         end
-      rescue Exception => e
-        @statusMessage = e.message
-        @isError = true
-      ensure
+      else
+        @statusMessage = MessageConstants::ERROR + MessageConstants::COLON + MessageConstants::WRONG_STREAM + MessageConstants::EXCLAMATION_MARK + MessageConstants::NEW_LINE_SYMBOL
       end
-    else
-      @statusMessage = MessageConstants::ERROR + MessageConstants::COLON + MessageConstants::WRONG_STREAM + MessageConstants::EXCLAMATION_MARK + MessageConstants::NEW_LINE_SYMBOL
+    else 
+      @statusMessage = MessageConstants::ERROR + MessageConstants::COLON + MessageConstants::EMPTY_STREAM + MessageConstants::EXCLAMATION_MARK + MessageConstants::NEW_LINE_SYMBOL
     end
     return statusMessage
   end
@@ -46,7 +50,7 @@ class Formatter
     elsif @countParentheses != 0 then
       @statusMessage =  MessageConstants::ERROR + MessageConstants::COLON +
         MessageConstants::ERROR_PARENTHESES_UNBALANCED + MessageConstants::EXCLAMATION_MARK + MessageConstants::NEW_LINE_SYMBOL
-    else
+    elsif @statusMessage.nil?
       @statusMessage = MessageConstants::SUCCESS + MessageConstants::EXCLAMATION_MARK + MessageConstants::NEW_LINE_SYMBOL
     end
     @statusMessage

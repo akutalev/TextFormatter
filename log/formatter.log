@@ -23,3 +23,19 @@
  [textformatter.rb:21:in `<main>']
 =>[ INFO 2013-09-17 17:44:54] Logger: Success!
  [textformatter.rb:21:in `<main>']
+=>[ INFO 2013-09-17 17:53:51] Logger: Success!
+ [textformatter.rb:21:in `<main>']
+=>[ INFO 2013-09-17 17:54:06] Logger: Success!
+ [textformatter.rb:21:in `<main>']
+=>[ INFO 2013-09-17 17:55:59] Logger: Success!
+ [textformatter.rb:21:in `<main>']
+=>[ INFO 2013-09-17 17:57:40] Logger: Unsuccess: input(output)stream must not be empty!
+ [textformatter.rb:21:in `<main>']
+=>[FATAL 2013-09-17 17:58:10] Logger: Unsuccess: undefined method `empty?' for nil:NilClass
+ [textformatter.rb:23:in `rescue in <main>']
+=>[FATAL 2013-09-17 18:06:32] Logger: Unsuccess: undefined method `empty?' for nil:NilClass
+ [textformatter.rb:23:in `rescue in <main>']
+=>[FATAL 2013-09-17 18:39:15] Logger: Unsuccess: undefined method `empty?' for nil:NilClass
+ [textformatter.rb:23:in `rescue in <main>']
+=>[ INFO 2013-09-17 18:39:57] Logger: Success!
+ [textformatter.rb:21:in `<main>']
